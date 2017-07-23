@@ -1,25 +1,95 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: "Assignment 1 - Reproducible Research"
+output: html_document
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
 
-## Loading and preprocessing the data
+## Question 1
+```{r question1}
+raw_data <- read.csv("C:/Users/Ranjan/Documents/Week 2 assignment/repdata%2Fdata%2Factivity/activity.csv", header = TRUE, sep = ',', colClasses = c("numeric", "character", "integer"))
+head(raw_data)
+library(lubridate)
+raw_data$date <- ymd(raw_data$date)
+str(raw_data)
+library(dplyr)
+## Total number of steps perday
+total_steps_per_day <- raw_data %>% filter(!is.na(raw_data$steps)) %>% group_by(date) %>% summarize(steps = sum(steps)) %>% print
+## Mean and median of total number of steps per day
+mean_total_steps_per_day <- mean(total_steps_per_day$steps)
+median_total_steps_per_day <- median(total_steps_per_day$steps)
+mean_total_steps_per_day
+median_total_steps_per_day
+## Histogram of total number of steps taken per day
+hist(total_steps_per_day$steps)
+```
+
+## Question 2
+```{r question2}
+#Question 2
+## compute the mean steps per five minute interval
+library(dplyr)
+mean_steps_per_interval <- raw_data %>% filter(!is.na(raw_data$steps)) %>% group_by(interval) %>% summarize(steps = mean(steps)) %>% print
+## Identify which five minute interval has the maximum steps
+mean_steps_per_interval[which.max(mean_steps_per_interval$steps),]
+## Plot a time series
+library(ggplot2)
+ggplot(mean_steps_per_interval, aes(x=mean_steps_per_interval$interval, y=steps)) + geom_line(color = "steelblue") + labs(x = expression("Mean Steps Per Interval"), y = "Steps")
+```
+
+## Question 3
+```{r question3}
+#Question 3
+## Calculate and report the total number of missing values
+sum(is.na(raw_data$steps))
+## Devise a strategy for filling in all of the missing values in the dataset
+### Replace the missing with the grouped mean
+data_duplicate <- raw_data
+identify_missing <- is.na(data_duplicate$steps)
+igonore_missing_steps_to_compute_mean <- tapply(data_duplicate$steps, data_duplicate$interval, mean, na.rm=TRUE, simplify=TRUE)
+data_duplicate$steps[identify_missing] <- igonore_missing_steps_to_compute_mean[as.character(data_duplicate$interval[identify_missing])]
+sum(is.na(data_duplicate$steps))
+head(data_duplicate)
+## Make a histogram of the total number of steps taken each day and Calculate and report the mean and median
+new_total_steps_per_day <- data_duplicate %>% group_by(date) %>% summarize(steps = sum(steps)) %>% print
+## Mean and median of total number of steps per day
+new_mean_total_steps_per_day <- mean(new_total_steps_per_day$steps)
+new_median_total_steps_per_day <- median(new_total_steps_per_day$steps)
+new_mean_total_steps_per_day
+new_median_total_steps_per_day
+### observe that mean and median are same (10766.19) - a strong case for normality
+## Histogram of total number of steps taken per day
+hist(new_total_steps_per_day$steps)
+library(ggplot2)
+ggplot(new_total_steps_per_day, aes(x = steps)) +
+        geom_histogram(fill = "steelblue", binwidth = 1000) +
+        labs(title = "New Histogram", x = "Steps per day", y = "Frequency")
+```
+
+## Question 4
+```{r question4}
+# Question 4
+##Create a new factor variable in the dataset with two levels - "weekday" and "weekend"
+library(dplyr)
+data_duplicate <- mutate(data_duplicate, weektype = ifelse(weekdays(data_duplicate$date) == "Saturday" | weekdays(data_duplicate$date) == "Sunday", "weekend", "weekday"))
+head(data_duplicate)
+data_duplicate$weektype <- as.factor(data_duplicate$weektype)
+transform(data_duplicate, weektype = factor(weektype))
+str(data_duplicate)
+```
+
+
+## Note that question 5 code is not working through Knitr. This is excluded from this page, though the code works fine on my computer. The Assignment.R file includes the codes for all the 5 questions.
 
 
 
-## What is mean total number of steps taken per day?
 
 
 
-## What is the average daily activity pattern?
 
 
 
-## Imputing missing values
 
 
-
-## Are there differences in activity patterns between weekdays and weekends?
